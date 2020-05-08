@@ -27,11 +27,11 @@
 #define SERIAL_WRITE_U16(v) SERIAL_WRITE((uint8_t)(v>>8)); SERIAL_WRITE((uint8_t)(v & 0xFF));
 
 #define GET_CMD_PACKET(...) \
-  uint8_t data[] = {__VA_ARGS__}; \ 
-  Adafruit_Fingerprint_Packet packet(FINGERPRINT_COMMANDPACKET, sizeof(data), data); \ 
+  uint8_t data[] = {__VA_ARGS__}; \
+  Adafruit_Fingerprint_Packet packet(FINGERPRINT_COMMANDPACKET, sizeof(data), data); \
   writeStructuredPacket(packet); \
-  if (getStructuredPacket(&packet) != FINGERPRINT_OK) return FINGERPRINT_PACKETRECIEVEERR; \ 
-  if (packet.type != FINGERPRINT_ACKPACKET) return FINGERPRINT_PACKETRECIEVEERR; 
+  if (getStructuredPacket(&packet) != FINGERPRINT_OK) return FINGERPRINT_PACKETRECIEVEERR; \
+  if (packet.type != FINGERPRINT_ACKPACKET) return FINGERPRINT_PACKETRECIEVEERR;
 
 #define SEND_CMD_PACKET(...) GET_CMD_PACKET(__VA_ARGS__); return packet.data[0];
 
@@ -89,17 +89,9 @@ Adafruit_Fingerprint::Adafruit_Fingerprint(HardwareSerial *hs, uint32_t password
 void Adafruit_Fingerprint::begin(uint32_t baudrate) {
   delay(1000);  // one second delay to let the sensor 'boot up'
 
-  if (hwSerial) 
-  {
-	  hwSerial->begin(baudrate);
-	  Serial.println("go to hwSerial");
-  }
+  if (hwSerial) hwSerial->begin(baudrate);
 #if defined(__AVR__) || defined(ESP8266) || defined(FREEDOM_E300_HIFIVE1)
-  if (swSerial) 
-  {
-	  swSerial->begin(baudrate);
-	  Serial.println("go to swSerial");
-  }
+  if (swSerial) swSerial->begin(baudrate);
 #endif
 }
 
@@ -325,11 +317,17 @@ uint8_t Adafruit_Fingerprint::uploadModel(uint8_t packet2[], uint8_t packet3[], 
 	 writePacket(theAddress, FINGERPRINT_COMMANDPACKET, sizeof(packet)+2, packet);
 	 delay(25);
 	 writePacket(theAddress, FINGERPRINT_DATAPACKET, 128+2, packet2);
+	 delay(25);
 	 writePacket(theAddress, FINGERPRINT_DATAPACKET, 128+2, packet3);
+	 delay(25);
 	 writePacket(theAddress, FINGERPRINT_DATAPACKET, 128+2, packet4);
+	 delay(25);
 	 writePacket(theAddress, FINGERPRINT_DATAPACKET, 128+2, packet5);
+	 delay(25);
 	 writePacket(theAddress, FINGERPRINT_DATAPACKET, 128+2, packet6);
+	 delay(25);
 	 writePacket(theAddress, FINGERPRINT_DATAPACKET, 128+2, packet7);
+	 delay(25);
 
     uint8_t len = getReply(packet);
     if ((len != 1) && (packet[0] != FINGERPRINT_ACKPACKET))
@@ -504,7 +502,9 @@ uint8_t Adafruit_Fingerprint::getReply(uint8_t packet[], uint16_t timeout)
     {
       delay(1);
       timer++;
-      if (timer >= timeout) return FINGERPRINT_TIMEOUT
+      if (timer >= timeout){
+		  return FINGERPRINT_TIMEOUT;
+	  }
     }
       reply[idx] = mySerial->read();
       if ((idx == 0) && (reply[0] != (FINGERPRINT_STARTCODE >> 8)))
